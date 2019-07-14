@@ -1,0 +1,62 @@
+version: '3.5'
+
+services:
+
+  backtor:
+    build: .
+    image: flaviostutz/backtor
+    ports:
+      - 5000:5000
+    environment:
+      - LOG_LEVEL=debug
+      - CONDUCTOR_API_URL=http://conductor-server:8080/api
+
+  conductor-server:
+    build: example-conductor
+    ports:
+      - 8080:8080
+    environment:
+      - DYNOMITE_HOSTS=dynomite:8102:us-east-1c
+      - ELASTICSEARCH_URL=elasticsearch:9300
+      - LOADSAMPLE=false
+      - PROVISIONING_UPDATE_EXISTING_TASKS=false
+
+  dynomite:
+    image: flaviostutz/dynomite:0.7.5
+    ports:
+      - 8102:8102
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.8
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1000m"
+      - transport.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
+      - 9300:9300
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20MB"
+        max-file: "5"
+
+  conductor-ui:
+    image: flaviostutz/conductor-ui
+    environment:
+      - WF_SERVER=http://conductor-server:8080/api/
+    ports:
+      - 5000:5000
+
+  # backtor-restic:
+  #   image: flaviostutz/backtor-restic
+  #   ports:
+  #     - 7070:7070
+  #   environment:
+  #     - RESTIC_PASSWORD=123
+  #     - LOG_LEVEL=debug
+  #     - PRE_BACKUP_COMMAND=dd if=/dev/zero of=/backup-source/TESTFILE bs=100MB count=2
+  #     - POST_BACKUP_COMMAND=rm /backup-source/TESTFILE
+  #     - SOURCE_DATA_PATH=/backup-source/TESTFILE
+  #     - TARGET_DATA_PATH=/backup-repo
