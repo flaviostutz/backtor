@@ -56,13 +56,15 @@ func prepareTimers() error {
 	if err != nil {
 		return err
 	}
+	logrus.Debugf("Enabled backup specs: %s", enabledBackupSpecs)
+	logrus.Debugf("Current routine hashes: %s", scheduledRoutineHashes)
 	for _, bs := range enabledBackupSpecs {
 		isScheduled := false
-		activeRoutineHash := fmt.Sprintf("%s|%s)", bs.Name, bs.BackupCronString)
+		activeRoutineHash := fmt.Sprintf("%s|%s)", bs.Name, *bs.BackupCronString)
 		for hashRoutine := range scheduledRoutineHashes {
 			if activeRoutineHash == hashRoutine {
 				isScheduled = true
-				break
+				//break
 			}
 		}
 		if !isScheduled {
@@ -74,17 +76,18 @@ func prepareTimers() error {
 	}
 
 	//remove go routines that are not currently active
+	logrus.Debugf("Current routine hashes after launches: %s", scheduledRoutineHashes)
 	for hashRoutine, cronJob := range scheduledRoutineHashes {
 		isActive := false
 		for _, bs := range enabledBackupSpecs {
-			activeRoutineHash := fmt.Sprintf("%s|%s)", bs.Name, bs.BackupCronString)
+			activeRoutineHash := fmt.Sprintf("%s|%s)", bs.Name, *bs.BackupCronString)
 			if hashRoutine == activeRoutineHash {
 				isActive = true
-				break
+				//break
 			}
 		}
 		if !isActive {
-			logrus.Infof("Schedule %s: Stopping timer", hashRoutine)
+			logrus.Infof("Stopping timer", hashRoutine)
 			cronJob.Stop()
 			delete(scheduledRoutineHashes, hashRoutine)
 		}
@@ -100,7 +103,7 @@ func launchBackupRoutine(backupName string) error {
 	}
 
 	c := cron.New()
-	logrus.Infof("Creating timer for backup %s. cron=%s", backupName, bs1.BackupCronString)
+	logrus.Infof("Creating timer for backup %s. cron=%s", backupName, *bs1.BackupCronString)
 	c.AddFunc(*bs1.BackupCronString, func() {
 		logrus.Debugf("Timer triggered for backup %s", backupName)
 

@@ -100,10 +100,10 @@ func triggerBackupDelete(materializedID string) error {
 	}
 
 	if mb.RunningDeleteWorkflowID != nil {
-		return fmt.Errorf("Materialized backup %s cannot be deleted because it already has a runningWorkflowID set", mb.ID)
+		return fmt.Errorf("Materialized backup %s cannot be deleted because it already has a runningCreateWorkflowID set", mb.ID)
 	}
 
-	workflowID, err1 := launchRemoveBackupWorkflow(mb.DataID)
+	workflowID, err1 := launchRemoveBackupWorkflow(mb.BackupName, mb.DataID)
 	if err1 != nil {
 		overallBackupWarnCounter.WithLabelValues(mb.BackupName, "error").Inc()
 		logrus.Warnf("Couldn't invoke Conductor workflow for backup removal. err=%s", err1)
@@ -148,7 +148,7 @@ func checkWorkflowBackupRemove(backupName string) {
 
 	if relaunch {
 		logrus.Warnf("Materialized backup %s has status 'deleting' but there is something wrong with its workflow. Relaunching", mb.ID)
-		wid, err2 := launchRemoveBackupWorkflow(mb.DataID)
+		wid, err2 := launchRemoveBackupWorkflow(mb.BackupName, mb.DataID)
 		if err2 != nil {
 			logrus.Warnf("Couldn't relaunch workflow for deleting dataId %s. err=%s", mb.DataID, err2)
 			return

@@ -77,13 +77,14 @@ func launchCreateBackupWorkflow(backupName string) (workflowID string, err error
 	return string(data), nil
 }
 
-func launchRemoveBackupWorkflow(dataID string) (workflowID string, err error) {
-	logrus.Debugf("removeBackupWorkflow dataID=%s", dataID)
+func launchRemoveBackupWorkflow(backupName string, dataID string) (workflowID string, err error) {
+	logrus.Debugf("removeBackupWorkflow backupName=%s dataID=%s", backupName, dataID)
 
 	wf := make(map[string]interface{})
 	wf["name"] = WORKFLOW_REMOVE
 	// wf["version"] = "1.0"
 	mi := make(map[string]interface{})
+	mi["backupName"] = backupName
 	mi["dataID"] = dataID
 	wf["input"] = mi
 	wfb, _ := json.Marshal(wf)

@@ -88,10 +88,10 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 		return "", fmt.Errorf("Couldn't load backup spec. err=%s", err)
 	}
 
-	if bs.RunningWorkflowID != nil {
-		wf, err := getWorkflowInstance(*bs.RunningWorkflowID)
+	if bs.RunningCreateWorkflowID != nil {
+		wf, err := getWorkflowInstance(*bs.RunningCreateWorkflowID)
 		if err != nil {
-			return "", fmt.Errorf("Couldn't get workflow id %s for checking if it is running. backup name %s. err=%s", *bs.RunningWorkflowID, backupName, err)
+			return "", fmt.Errorf("Couldn't get workflow id %s for checking if it is running. backup name %s. err=%s", *bs.RunningCreateWorkflowID, backupName, err)
 		}
 		if wf.status == "running" {
 			overallBackupWarnCounter.WithLabelValues(backupName, "warning").Inc()
@@ -107,7 +107,7 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 	}
 
 	logrus.Infof("Workflow launched successfuly. workflowID=%s", workflowID)
-	updateBackupSpecRunningWorkflowID(backupName, &workflowID)
+	updateBackupSpecRunningCreateWorkflowID(backupName, &workflowID)
 
 	elapsed := time.Now().Sub(start)
 	logrus.Debugf("Backup triggering done. elapsed=%s", elapsed)
@@ -121,13 +121,13 @@ func checkBackupWorkflow(backupName string) {
 		logrus.Debugf("Couldn't get backup spec %s. err=%s", backupName, err)
 		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
 	}
-	if bs.RunningWorkflowID == nil {
+	if bs.RunningCreateWorkflowID == nil {
 		logrus.Debugf("Backup Spec %s has no running workflow set", backupName)
 		return
 	}
-	wf, err0 := getWorkflowInstance(*bs.RunningWorkflowID)
+	wf, err0 := getWorkflowInstance(*bs.RunningCreateWorkflowID)
 	if err0 != nil {
-		logrus.Debugf("Couldn't get workflow instance %s. err=%s", *bs.RunningWorkflowID, err0)
+		logrus.Debugf("Couldn't get workflow instance %s. err=%s", *bs.RunningCreateWorkflowID, err0)
 		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
 		return
 	}
@@ -151,7 +151,7 @@ func checkBackupWorkflow(backupName string) {
 		}
 	}
 
-	updateBackupSpecRunningWorkflowID(backupName, nil)
+	updateBackupSpecRunningCreateWorkflowID(backupName, nil)
 	err1 := createMaterializedBackup(wf.workflowID, backupName, wf.dataID, wf.status, wf.startTime, wf.endTime, wf.dataSizeMB)
 	if err1 != nil {
 		logrus.Errorf("Couldn't create materialized backup on database. err=%s", err1)
@@ -160,7 +160,7 @@ func checkBackupWorkflow(backupName string) {
 	}
 
 	logrus.Debugf("Materialized backup saved to database successfuly. id=%s", wf.workflowID)
-	updateBackupSpecRunningWorkflowID(backupName, nil)
+	updateBackupSpecRunningCreateWorkflowID(backupName, nil)
 	if wf.status == "completed" {
 		backupMaterializedCounter.WithLabelValues(backupName, "success").Inc()
 		backupLastSizeGauge.WithLabelValues(backupName).Set(*wf.dataSizeMB)

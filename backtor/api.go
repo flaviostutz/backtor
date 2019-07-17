@@ -38,7 +38,7 @@ func NewHTTPServer() *HTTPServer {
 	}))
 
 	h := &HTTPServer{server: &http.Server{
-		Addr:    ":5000",
+		Addr:    ":6000",
 		Handler: router,
 	}, router: router}
 
@@ -53,6 +53,6 @@ func NewHTTPServer() *HTTPServer {
 
 //Start the main HTTP Server entry
 func (s *HTTPServer) Start() error {
-	logrus.Infof("Starting HTTP Server on port 5000")
+	logrus.Infof("Starting HTTP Server on port 6000")
 	return s.server.ListenAndServe()
 }

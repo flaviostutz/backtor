@@ -13,7 +13,7 @@ import (
 )
 
 func (h *HTTPServer) setupBackupSpecHandlers() {
-	h.router.GET("/backup/:name", ListBackupSpecs())
+	h.router.GET("/backup", ListBackupSpecs())
 	h.router.POST("/backup", CreateBackupSpec())
 	h.router.PUT("/backup/:name", UpdateBackupSpec())
 	// h.router.DELETE("/backup/:name", DeleteBackupSpec())
@@ -73,8 +73,18 @@ func CreateBackupSpec() func(*gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Error creating backup spec. err=%s", err)})
 			return
 		}
+
+		err1 := prepareTimers()
+		if err1 != nil {
+			logrus.Errorf("Error updating timers. err=%s", err1)
+			apiInvocationsCounter.WithLabelValues("backup-spec", "error").Inc()
+			c.JSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Backup created but timer could not be updated. err=%s", err)})
+			return
+		}
+
 		c.JSON(http.StatusCreated, gin.H{"message": fmt.Sprintf("Backup spec created. name=%s", bs.Name)})
 		apiInvocationsCounter.WithLabelValues("backup-spec", "success").Inc()
+
 	}
 }
 
@@ -102,6 +112,15 @@ func UpdateBackupSpec() func(*gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Error updating backup spec. err=%s", err)})
 			return
 		}
+
+		err1 := prepareTimers()
+		if err1 != nil {
+			logrus.Errorf("Error updating timers. err=%s", err1)
+			apiInvocationsCounter.WithLabelValues("backup-spec", "error").Inc()
+			c.JSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Backup created but timer could not be updated. err=%s", err)})
+			return
+		}
+
 		c.JSON(http.StatusCreated, gin.H{"message": fmt.Sprintf("Backup spec updated. name=%s", bs.Name)})
 		apiInvocationsCounter.WithLabelValues("backup-spec", "success").Inc()
 	}
@@ -181,15 +200,15 @@ func calculateCronString(minutelyParams []string, hourlyParams []string, dailyPa
 	}
 
 	if minutelyParams[0] != "0" {
-		return minutelyRef + "* * * * * *"
+		return minutelyRef + "* * * * *"
 	} else if hourlyParams[0] != "0" {
-		return minutelyRef + hourlyRef + "* * * * *"
+		return minutelyRef + hourlyRef + "* * * *"
 	} else if dailyParams[0] != "0" {
-		return minutelyRef + hourlyRef + dailyRef + "* * * *"
+		return minutelyRef + hourlyRef + dailyRef + "* * *"
 	} else if weeklyParams[0] != "0" {
-		return minutelyRef + hourlyRef + dailyRef + "* " + "* " + weeklyRef + "*"
+		return minutelyRef + hourlyRef + dailyRef + "* " + "* " + weeklyRef
 	} else if monthlyParams[0] != "0" {
-		return minutelyRef + hourlyRef + dailyRef + monthlyRef + "* * *"
+		return minutelyRef + hourlyRef + dailyRef + monthlyRef + "* *"
 		// } else if yearlyParams[0] != "0" {
 	} else {
 		return minutelyRef + hourlyRef + dailyRef + monthlyRef + yearlyRef + "* *"

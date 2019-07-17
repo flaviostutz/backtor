@@ -16,7 +16,7 @@ func InitDB() (*sql.DB, error) {
 		return nil, err
 	}
 
-	statement, err1 := db0.Prepare("CREATE TABLE IF NOT EXISTS backup_spec (name TEXT, enabled INTEGER NOT NULL, running INTEGER NOT NULL, status TEXT NOT NULL, start_time TIMESTAMP NOT NULL, end_time TIMESTAMP NOT NULL, last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, minutely VARCHAR NOT NULL DEFAULT '0@L', hourly VARCHAR NOT NULL DEFAULT '0@L', daily VARCHAR NOT NULL DEFAULT '4@L', weekly VARCHAR NOT NULL DEFAULT '4@L', monthly VARCHAR NOT NULL DEFAULT '3@L', yearly VARCHAR NOT NULL DEFAULT '2@L', PRIMARY KEY(`name`))")
+	statement, err1 := db0.Prepare("CREATE TABLE IF NOT EXISTS backup_spec (name TEXT, enabled INTEGER NOT NULL, running_create_workflow TEXT, from_date TIMESTAMP, to_date TIMESTAMP, last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, backup_cron_string TEXT NOT NULL, retention_minutely VARCHAR NOT NULL DEFAULT '0@L', retention_hourly VARCHAR NOT NULL DEFAULT '0@L', retention_daily VARCHAR NOT NULL DEFAULT '4@L', retention_weekly VARCHAR NOT NULL DEFAULT '4@L', retention_monthly VARCHAR NOT NULL DEFAULT '3@L', retention_yearly VARCHAR NOT NULL DEFAULT '2@L', PRIMARY KEY(`name`))")
 	if err1 != nil {
 		return nil, err1
 	}

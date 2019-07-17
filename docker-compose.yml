@@ -6,13 +6,13 @@ services:
     build: .
     image: flaviostutz/backtor
     ports:
-      - 5000:5000
+      - 6000:6000
     environment:
       - LOG_LEVEL=debug
-      - CONDUCTOR_API_URL=http://conductor-server:8080/api
+      - CONDUCTOR_API_URL=http://backtor-conductor:8080/api
 
-  conductor-server:
-    build: example-conductor
+  backtor-conductor:
+    image: flaviostutz/backtor-conductor
     ports:
       - 8080:8080
     environment:
@@ -45,7 +45,7 @@ services:
   conductor-ui:
     image: flaviostutz/conductor-ui
     environment:
-      - WF_SERVER=http://conductor-server:8080/api/
+      - WF_SERVER=http://backtor-conductor:8080/api/
     ports:
       - 5000:5000
 
