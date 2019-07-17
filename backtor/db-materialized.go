@@ -129,7 +129,7 @@ func getMaterializedBackups(backupName string, limit int, tag string, status str
 }
 
 func getExclusiveTagAvailableMaterializedBackups(backupName string, tag string, skipNewestCount int, limit int) ([]MaterializedBackup, error) {
-	whereTags := fmt.Sprintf(" WHERE backup_name='%s'", backupName)
+	whereTags := fmt.Sprintf("backup_name='%s'", backupName)
 	tags := []string{"minutely", "hourly", "daily", "weekly", "monthly", "yearly"}
 	if tag != "" {
 		for _, t := range tags {
@@ -146,7 +146,7 @@ func getExclusiveTagAvailableMaterializedBackups(backupName string, tag string, 
 	}
 
 	q := fmt.Sprintf("SELECT id,data_id,status,backup_name,start_time,end_time,running_delete_workflow,reference,minutely,hourly,daily,weekly,monthly,yearly FROM materialized_backup WHERE %s AND status='available' ORDER BY start_time DESC LIMIT %d OFFSET %d", whereTags, limit, skipNewestCount)
-	logrus.Debugf("getExclusiveTags query=%s", q)
+	logrus.Debugf("getExclusiveTagAvailableMaterializedBackups query=%s", q)
 	rows, err1 := db.Query(q)
 	if err1 != nil {
 		metricsSQLCounter.WithLabelValues("error").Inc()

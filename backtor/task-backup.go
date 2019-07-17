@@ -95,7 +95,7 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 		}
 		if wf.status == "running" {
 			overallBackupWarnCounter.WithLabelValues(backupName, "warning").Inc()
-			return "", fmt.Errorf("Another backup workflow for backup %s is running (%s). name=%s", backupName, wf.workflowID)
+			return "", fmt.Errorf("Another backup workflow for backup %s is running (%s)", backupName, wf.workflowID)
 		}
 	}
 
@@ -107,7 +107,10 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 	}
 
 	logrus.Infof("Workflow launched successfuly. workflowID=%s", workflowID)
-	updateBackupSpecRunningCreateWorkflowID(backupName, &workflowID)
+	err4 := updateBackupSpecRunningCreateWorkflowID(backupName, &workflowID)
+	if err4 != nil {
+		return "", err4
+	}
 
 	elapsed := time.Now().Sub(start)
 	logrus.Debugf("Backup triggering done. elapsed=%s", elapsed)

@@ -34,8 +34,8 @@ type WorkflowInstance struct {
 	endTime    time.Time
 }
 
-var WORKFLOW_CREATE = "create-backup"
-var WORKFLOW_REMOVE = "remove-backup"
+var workflowCreate = "create_backup"
+var workflowRemove = "remove_backup"
 
 func InitConductor() {
 	prometheus.MustRegister(invocationHist)
@@ -55,7 +55,7 @@ func launchCreateBackupWorkflow(backupName string) (workflowID string, err error
 	}
 
 	wf := make(map[string]interface{})
-	wf["name"] = WORKFLOW_CREATE
+	wf["name"] = workflowCreate
 	// wf["version"] = "1.0"
 	mi := make(map[string]interface{})
 	mi["backupName"] = bs.Name
@@ -73,7 +73,7 @@ func launchCreateBackupWorkflow(backupName string) (workflowID string, err error
 		logrus.Warnf("POST /workflow call status!=200. resp=%v", resp)
 		return "", fmt.Errorf("Failed to create new workflow instance. status=%d", resp.StatusCode)
 	}
-	logrus.Infof("Workflow %s launched for creating backup %s. workflowId=%s", WORKFLOW_CREATE, backupName, string(data))
+	logrus.Infof("Workflow %s launched for creating backup %s. workflowId=%s", workflowCreate, backupName, string(data))
 	return string(data), nil
 }
 
@@ -81,7 +81,7 @@ func launchRemoveBackupWorkflow(backupName string, dataID string) (workflowID st
 	logrus.Debugf("removeBackupWorkflow backupName=%s dataID=%s", backupName, dataID)
 
 	wf := make(map[string]interface{})
-	wf["name"] = WORKFLOW_REMOVE
+	wf["name"] = workflowRemove
 	// wf["version"] = "1.0"
 	mi := make(map[string]interface{})
 	mi["backupName"] = backupName
@@ -102,7 +102,7 @@ func launchRemoveBackupWorkflow(backupName string, dataID string) (workflowID st
 	}
 
 	workflowID = string(data)
-	logrus.Infof("Workflow %s launched for removing dataID %s. workflowId=%s", WORKFLOW_REMOVE, dataID, workflowID)
+	logrus.Infof("Workflow %s launched for removing dataID %s. workflowId=%s", workflowRemove, dataID, workflowID)
 
 	return workflowID, nil
 }

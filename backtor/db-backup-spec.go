@@ -135,28 +135,50 @@ func listBackupSpecs(enabled *int) ([]BackupSpec, error) {
 }
 
 func deleteBackupSpec(backupName string) error {
+	logrus.Debugf("Deleting backup %s", backupName)
 	stmt, err1 := db.Prepare(`DELETE backup_spec 
 							  WHERE name='` + backupName + `'`)
 	if err1 != nil {
 		return err1
 	}
-	_, err2 := stmt.Exec()
+	res, err2 := stmt.Exec()
 	if err2 != nil {
 		return err2
+	}
+	count, err3 := res.RowsAffected()
+	if err3 != nil {
+		return err3
+	}
+	logrus.Debugf("%d backup spec rows deleted", count)
+	if count != 1 {
+		return fmt.Errorf("Backup spec %s was not removed. count=%d", backupName, count)
 	}
 	return nil
 }
 
-func updateBackupSpecRunningCreateWorkflowID(backupName string, RunningCreateWorkflowID *string) error {
+func updateBackupSpecRunningCreateWorkflowID(backupName string, runningCreateWorkflowID *string) error {
+	if runningCreateWorkflowID == nil {
+		logrus.Debugf("Setting running_create_workflow of backup spec %s to nil", backupName)
+	} else {
+		logrus.Debugf("Setting running_create_workflow of backup spec %s to %s", backupName, *runningCreateWorkflowID)
+	}
 	stmt, err1 := db.Prepare(`UPDATE backup_spec SET
 							  running_create_workflow=?
 							  WHERE name=?`)
 	if err1 != nil {
 		return err1
 	}
-	_, err2 := stmt.Exec(backupName, RunningCreateWorkflowID)
+	res, err2 := stmt.Exec(backupName, runningCreateWorkflowID)
 	if err2 != nil {
 		return err2
+	}
+	count, err3 := res.RowsAffected()
+	if err3 != nil {
+		return err3
+	}
+	logrus.Debugf("%d backup spec rows updated", count)
+	if count != 1 {
+		return fmt.Errorf("Backup spec %s was not updated. count=%d", backupName, count)
 	}
 	return nil
 }
