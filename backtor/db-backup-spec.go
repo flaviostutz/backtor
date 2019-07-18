@@ -32,7 +32,7 @@ func createBackupSpec(bs BackupSpec) error {
 								from_date, to_date, last_update, 
 								retention_minutely, retention_hourly, retention_daily, retention_weekly, 
 								retention_monthly, retention_yearly, backup_cron_string
-							) values(?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+							) values(?,?,?,?,?,?,?,?,?,?,?,?,?);`)
 	if err1 != nil {
 		return err1
 	}
@@ -52,17 +52,26 @@ func updateBackupSpec(bs BackupSpec) error {
 								from_date=?, to_date=?, last_update=?, 
 								retention_minutely=?, retention_hourly=?, retention_daily=?, retention_weekly=?, 
 								retention_monthly=?, retention_yearly=?, backup_cron_string=?
-							  WHERE name='` + bs.Name + `'`)
+							  WHERE name='` + bs.Name + `';`)
 	if err1 != nil {
 		return err1
 	}
-	_, err2 := stmt.Exec(bs.Name, bs.Enabled, bs.RunningCreateWorkflowID,
+	resp, err2 := stmt.Exec(bs.Name, bs.Enabled, bs.RunningCreateWorkflowID,
 		bs.FromDate, bs.ToDate, bs.LastUpdate,
 		bs.RetentionMinutely, bs.RetentionHourly, bs.RetentionDaily, bs.RetentionWeekly,
 		bs.RetentionMonthly, bs.RetentionYearly, bs.BackupCronString)
 	if err2 != nil {
 		return err2
 	}
+
+	count, err3 := resp.RowsAffected()
+	if err3 != nil {
+		return err3
+	}
+	if count == 0 {
+		return fmt.Errorf("Backup spec %s doesn't exist", bs.Name)
+	}
+
 	return nil
 }
 
@@ -72,7 +81,7 @@ func getBackupSpec(backupName string) (BackupSpec, error) {
 			from_date, to_date, last_update, 
 			retention_minutely, retention_hourly, retention_daily, retention_weekly, 
 			retention_monthly, retention_yearly, backup_cron_string
-			FROM backup_spec WHERE name='` + backupName + `'`)
+			FROM backup_spec WHERE name='` + backupName + `';`)
 	if err1 != nil {
 		return BackupSpec{}, err1
 	}
@@ -106,7 +115,7 @@ func listBackupSpecs(enabled *int) ([]BackupSpec, error) {
 			from_date, to_date, last_update, 
 			retention_minutely, retention_hourly, retention_daily, retention_weekly, 
 			retention_monthly, retention_yearly, backup_cron_string
-		FROM backup_spec ` + where + ` ORDER BY name`
+		FROM backup_spec ` + where + ` ORDER BY name;`
 
 	logrus.Debugf("query=%s", q)
 	rows, err1 := db.Query(q)
@@ -137,7 +146,7 @@ func listBackupSpecs(enabled *int) ([]BackupSpec, error) {
 func deleteBackupSpec(backupName string) error {
 	logrus.Debugf("Deleting backup %s", backupName)
 	stmt, err1 := db.Prepare(`DELETE backup_spec 
-							  WHERE name='` + backupName + `'`)
+							  WHERE name='` + backupName + `';`)
 	if err1 != nil {
 		return err1
 	}
@@ -162,23 +171,27 @@ func updateBackupSpecRunningCreateWorkflowID(backupName string, runningCreateWor
 	} else {
 		logrus.Debugf("Setting running_create_workflow of backup spec %s to %s", backupName, *runningCreateWorkflowID)
 	}
-	stmt, err1 := db.Prepare(`UPDATE backup_spec SET
-							  running_create_workflow=?
-							  WHERE name=?`)
+
+	workflowid := "NULL"
+	if runningCreateWorkflowID != nil {
+		workflowid = fmt.Sprintf("'%s'", *runningCreateWorkflowID)
+	}
+	stmt, err1 := db.Prepare(fmt.Sprintf("UPDATE backup_spec SET running_create_workflow=%s WHERE name='%s';", workflowid, backupName))
 	if err1 != nil {
 		return err1
 	}
-	res, err2 := stmt.Exec(backupName, runningCreateWorkflowID)
+	res, err2 := stmt.Exec()
 	if err2 != nil {
 		return err2
 	}
+
 	count, err3 := res.RowsAffected()
 	if err3 != nil {
 		return err3
 	}
 	logrus.Debugf("%d backup spec rows updated", count)
 	if count != 1 {
-		return fmt.Errorf("Backup spec %s was not updated. count=%d", backupName, count)
+		return fmt.Errorf("running_workflowid for backup spec %s was not updated. count=%d", backupName, count)
 	}
 	return nil
 }

@@ -95,7 +95,7 @@ func triggerBackupDelete(materializedID string) error {
 		return fmt.Errorf("Couldn't load materized backup %s", materializedID)
 	}
 
-	if mb.Status != "completed" {
+	if mb.Status != "COMPLETED" {
 		return fmt.Errorf("Materialized backup %s cannot be deleted because its status is not 'completed'. status=%s", mb.ID, mb.Status)
 	}
 
@@ -124,21 +124,22 @@ func checkWorkflowBackupRemove(backupName string) {
 	mbs, err := getMaterializedBackups(backupName, 1, "", "deleting", false)
 	if err != nil {
 		logrus.Warnf("Couldn't load materializeds for backup %s", backupName)
-		overallBackupWarnCounter.WithLabelValues("none", "error").Inc()
+		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
+		return
 	}
 	if len(mbs) == 0 {
 		logrus.Debugf("No materialized backups pending delete for backup %s", backupName)
 		return
 	}
 
-	relaunch := false
 	mb := mbs[0]
 	if mb.RunningDeleteWorkflowID == nil {
 		logrus.Errorf("Materialized backup %s has no running delete workflow set but status is 'deleting'", mb.ID)
-		overallBackupWarnCounter.WithLabelValues("none", "error").Inc()
-		relaunch = true
+		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
+		return
 	}
 
+	relaunch := false
 	wf, err0 := getWorkflowInstance(*mb.RunningDeleteWorkflowID)
 	if err0 != nil {
 		logrus.Debugf("Couldn't get workflow instance %s. err=%s", *mb.RunningDeleteWorkflowID, err0)
@@ -157,11 +158,8 @@ func checkWorkflowBackupRemove(backupName string) {
 		return
 	}
 
-	if wf.status == "running" {
+	if wf.status == "RUNNING" {
 		logrus.Debugf("Workflow %s for removing materialized backup is still running", *mb.RunningDeleteWorkflowID)
-		// if time.Now().Sub(wf.startTime).Seconds() > float64(bs.TimeoutSeconds) {
-		// logrus.Warnf("Materialized backup removal for backup %s timeout. Check conductor workflow", mb.BackupName)
-		// }
 		return
 	}
 
@@ -170,21 +168,26 @@ func checkWorkflowBackupRemove(backupName string) {
 	avoidRetentionLock.Lock()
 	defer avoidRetentionLock.Unlock()
 
-	if wf.status != "completed" {
-		logrus.Warnf("Workflow %s has finished but there is some error. status=%s. backupName=%s. dataId=%s", wf.workflowID, wf.status, mb.BackupName, mb.DataID)
-		// retentionBackupsDeleteCounter.WithLabelValues(backupName, wf.status).Inc()
-		return
+	if wf.status != "COMPLETED" {
+		logrus.Warnf("Workflow %s has finished but not as COMPLETED. status=%s. backupName=%s. dataId=%s", wf.workflowID, wf.status, mb.BackupName, mb.DataID)
+		_, err2 := setStatusMaterializedBackup(mb.ID, "delete-error")
+		if err2 != nil {
+			logrus.Errorf("Couldn't set materialized backup status. err=%s", err2)
+			overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
+			return
+		}
 	}
-
-	logrus.Warnf("Workflow %s has completed and backup was removed. dataId=%s. backupName=%s", wf.workflowID, mb.DataID, mb.BackupName)
-	retentionBackupsDeleteCounter.WithLabelValues(backupName, wf.status).Inc()
-
+parei testando aqui
+	logrus.Warnf("Workflow %s has finished. status=%s. backupName=%s. dataId=%s", wf.workflowID, wf.status, mb.BackupName, mb.DataID)
 	_, err2 := setStatusMaterializedBackup(mb.ID, "deleted")
 	if err2 != nil {
 		logrus.Errorf("Couldn't set materialized backup status. err=%s", err2)
 		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
 		return
 	}
+	logrus.Warnf("Workflow %s has completed and backup was removed. dataId=%s. backupName=%s", wf.workflowID, mb.DataID, mb.BackupName)
+	retentionBackupsDeleteCounter.WithLabelValues(backupName, wf.status).Inc()
+	return
 }
 
 func appendElectedForTag(backupName string, tag string, retentionCount string, appendTo []MaterializedBackup) []MaterializedBackup {

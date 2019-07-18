@@ -114,6 +114,10 @@ func getWorkflowInstance(workflowID string) (WorkflowInstance, error) {
 	if err != nil {
 		return wi, fmt.Errorf("GET /workflow/%s?includeTasks=false failed. err=%s", err, workflowID)
 	}
+	if resp.StatusCode == 404 {
+		wi.status = "NOT_FOUND"
+		return wi, fmt.Errorf("Workflow not found. workflowId=%s. status=%d", workflowID, resp.StatusCode)
+	}
 	if resp.StatusCode != 200 {
 		return wi, fmt.Errorf("Couldn't get workflow info. workflowId=%s. status=%d", workflowID, resp.StatusCode)
 	}
@@ -124,20 +128,42 @@ func getWorkflowInstance(workflowID string) (WorkflowInstance, error) {
 		logrus.Errorf("Error parsing json. err=%s", err)
 		return WorkflowInstance{}, err
 	}
-	wi.workflowID = wfdata["id"].(string)
+	wi.workflowID = wfdata["workflowId"].(string)
 	wi.status = wfdata["status"].(string)
 	out, exists := wfdata["output"]
 	if exists {
 		wfoutput := out.(map[string]interface{})
 		did, ex := wfoutput["dataId"]
 		if ex {
-			a := did.(string)
-			wi.dataID = &a
+			if did != nil {
+				a := did.(string)
+				wi.dataID = &a
+			}
+		}
+		did1, ex1 := wfoutput["dataSizeMB"]
+		if ex1 {
+			if did1 != nil {
+				a := did1.(float64)
+				wi.dataSizeMB = &a
+			}
 		}
 	}
-	//FIXME
-	wi.startTime = wfdata["startTime"].(time.Time)
-	wi.endTime = wfdata["endTime"].(time.Time)
+
+	et, ex1 := wfdata["createTime"]
+	if ex1 {
+		t := int64(et.(float64) / 1000)
+		if t > 0 {
+			wi.startTime = time.Unix(t, 0)
+		}
+	}
+
+	et, ex1 = wfdata["endTime"]
+	if ex1 {
+		t := int64(et.(float64) / 1000)
+		if t > 0 {
+			wi.endTime = time.Unix(t, 0)
+		}
+	}
 	return wi, nil
 }
 

@@ -90,10 +90,14 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 
 	if bs.RunningCreateWorkflowID != nil {
 		wf, err := getWorkflowInstance(*bs.RunningCreateWorkflowID)
+		logrus.Debugf("Workflow %v", wf)
 		if err != nil {
-			return "", fmt.Errorf("Couldn't get workflow id %s for checking if it is running. backup name %s. err=%s", *bs.RunningCreateWorkflowID, backupName, err)
+			if wf.status != "NOT_FOUND" {
+				return "", fmt.Errorf("Couldn't get workflow id %s for checking if it is running. backup name %s. err=%s", *bs.RunningCreateWorkflowID, backupName, err)
+			}
+			logrus.Warnf("Workflow %s is set to backup spec, but was not found in Conductor. Proceeding to create a new workflow instance. backup=%s", backupName, *bs.RunningCreateWorkflowID)
 		}
-		if wf.status == "running" {
+		if wf.status == "RUNNING" {
 			overallBackupWarnCounter.WithLabelValues(backupName, "warning").Inc()
 			return "", fmt.Errorf("Another backup workflow for backup %s is running (%s)", backupName, wf.workflowID)
 		}
@@ -135,8 +139,8 @@ func checkBackupWorkflow(backupName string) {
 		return
 	}
 
-	if wf.status == "running" {
-		logrus.Debugf("Workflow %s launched for backup %s is still running", wf.workflowID, backupName)
+	if wf.status == "RUNNING" {
+		logrus.Debugf("Workflow %s was launched for backup %s and is still running", wf.workflowID, backupName)
 		return
 	}
 
@@ -145,16 +149,25 @@ func checkBackupWorkflow(backupName string) {
 	avoidRetentionLock.Lock()
 	defer avoidRetentionLock.Unlock()
 
-	backupMaterializedCounter.WithLabelValues(backupName, wf.status).Inc()
-
-	if wf.status == "completed" {
-		if *wf.dataID == "" {
-			logrus.Warnf("Workflow %s has completed but returned no dataID. Check worker. Backup will be ignored", wf.workflowID)
-			backupMaterializedCounter.WithLabelValues(backupName, "completed-nodataid").Inc()
-		}
+	err2 := updateBackupSpecRunningCreateWorkflowID(backupName, nil)
+	if err2 != nil {
+		logrus.Errorf("Couldn't set backup spec running create workflowid to nil. err=%s", err2)
+		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
+		return
 	}
 
-	updateBackupSpecRunningCreateWorkflowID(backupName, nil)
+	if wf.status != "COMPLETED" {
+		logrus.Warnf("Workflow %s completed with status!=COMPLETED. backupName=%s. status=%s", wf.workflowID, backupName, wf.status)
+		overallBackupWarnCounter.WithLabelValues(backupName, "warning").Inc()
+		return
+	}
+
+	if wf.dataID == nil || wf.dataSizeMB == nil || *wf.dataSizeMB == 0 {
+		logrus.Warnf("Workflow %s has completed but didn't return dataID and dataSizeMB. Check worker. Backup will be ignored. workflow=%v", wf.workflowID, wf)
+		overallBackupWarnCounter.WithLabelValues(backupName, "warning").Inc()
+		return
+	}
+
 	err1 := createMaterializedBackup(wf.workflowID, backupName, wf.dataID, wf.status, wf.startTime, wf.endTime, wf.dataSizeMB)
 	if err1 != nil {
 		logrus.Errorf("Couldn't create materialized backup on database. err=%s", err1)
@@ -163,14 +176,10 @@ func checkBackupWorkflow(backupName string) {
 	}
 
 	logrus.Debugf("Materialized backup saved to database successfuly. id=%s", wf.workflowID)
-	updateBackupSpecRunningCreateWorkflowID(backupName, nil)
-	if wf.status == "completed" {
-		backupMaterializedCounter.WithLabelValues(backupName, "success").Inc()
-		backupLastSizeGauge.WithLabelValues(backupName).Set(*wf.dataSizeMB)
-		backupLastTimeGauge.WithLabelValues(backupName).Set(float64(time.Now().Sub(wf.endTime).Seconds()))
-	} else {
-		backupMaterializedCounter.WithLabelValues(backupName, "error").Inc()
-	}
+	backupMaterializedCounter.WithLabelValues(backupName, "success").Inc()
+	backupLastSizeGauge.WithLabelValues(backupName).Set(*wf.dataSizeMB)
+	backupLastTimeGauge.WithLabelValues(backupName).Set(float64(wf.endTime.Sub(wf.startTime).Seconds()))
+
 	err = tagAllBackups(backupName)
 	if err != nil {
 		logrus.Errorf("Error tagging backups. err=%s", err)
@@ -195,7 +204,7 @@ func tagAllBackups(backupName string) error {
 
 	//check last backup
 	logrus.Debug("Checking for backups available")
-	backups, err1 := getMaterializedBackups(bs.Name, 1, "", "available", false)
+	backups, err1 := getMaterializedBackups(bs.Name, 1, "", "COMPLETED", false)
 	if err1 != nil {
 		tx.Rollback()
 		return fmt.Errorf("Error getting last backup. err=%s", err)

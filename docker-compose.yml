@@ -10,6 +10,8 @@ services:
     environment:
       - LOG_LEVEL=debug
       - CONDUCTOR_API_URL=http://backtor-conductor:8080/api
+    volumes:
+      - backtor:/var/lib/backtor/data
 
   backtor-conductor:
     image: flaviostutz/backtor-conductor
@@ -48,6 +50,9 @@ services:
       - WF_SERVER=http://backtor-conductor:8080/api/
     ports:
       - 5000:5000
+
+volumes:
+  backtor:
 
   # backtor-restic:
   #   image: flaviostutz/backtor-restic

@@ -68,10 +68,9 @@ func getMaterializedBackup(id string) (MaterializedBackup, error) {
 		if err2 != nil {
 			metricsSQLCounter.WithLabelValues("error").Inc()
 			return MaterializedBackup{}, err2
-		} else {
-			metricsSQLCounter.WithLabelValues("success").Inc()
-			return backup, nil
 		}
+		metricsSQLCounter.WithLabelValues("success").Inc()
+		return backup, nil
 	}
 	err := rows.Err()
 	if err != nil {
@@ -115,9 +114,8 @@ func getMaterializedBackups(backupName string, limit int, tag string, status str
 		if err2 != nil {
 			metricsSQLCounter.WithLabelValues("error").Inc()
 			return []MaterializedBackup{}, err2
-		} else {
-			materializeds = append(materializeds, m)
 		}
+		materializeds = append(materializeds, m)
 	}
 	err := rows.Err()
 	if err != nil {
@@ -145,7 +143,7 @@ func getExclusiveTagAvailableMaterializedBackups(backupName string, tag string, 
 		}
 	}
 
-	q := fmt.Sprintf("SELECT id,data_id,status,backup_name,start_time,end_time,running_delete_workflow,reference,minutely,hourly,daily,weekly,monthly,yearly FROM materialized_backup WHERE %s AND status='available' ORDER BY start_time DESC LIMIT %d OFFSET %d", whereTags, limit, skipNewestCount)
+	q := fmt.Sprintf("SELECT id,data_id,status,backup_name,start_time,end_time,running_delete_workflow,reference,minutely,hourly,daily,weekly,monthly,yearly FROM materialized_backup WHERE %s AND status='COMPLETED' ORDER BY start_time DESC LIMIT %d OFFSET %d", whereTags, limit, skipNewestCount)
 	logrus.Debugf("getExclusiveTagAvailableMaterializedBackups query=%s", q)
 	rows, err1 := db.Query(q)
 	if err1 != nil {
@@ -161,9 +159,8 @@ func getExclusiveTagAvailableMaterializedBackups(backupName string, tag string, 
 		if err2 != nil {
 			metricsSQLCounter.WithLabelValues("error").Inc()
 			return []MaterializedBackup{}, err2
-		} else {
-			mbs = append(mbs, m)
 		}
+		mbs = append(mbs, m)
 	}
 	err := rows.Err()
 	if err != nil {
@@ -232,9 +229,8 @@ func setStatusMaterializedBackup(materializedID string, status string) (sql.Resu
 	if err != nil {
 		metricsSQLCounter.WithLabelValues("error").Inc()
 		return nil, err
-	} else {
-		metricsSQLCounter.WithLabelValues("success").Inc()
 	}
+	metricsSQLCounter.WithLabelValues("success").Inc()
 	return stmt.Exec(status, materializedID)
 }
 

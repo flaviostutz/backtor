@@ -124,6 +124,8 @@ func launchBackupRoutine(backupName string) error {
 
 		if isBefore && isAfter {
 
+			checkBackupWorkflow(backupName)
+
 			wid, err := triggerNewBackup(backupName)
 			if err != nil {
 				logrus.Warnf("Error launching backup workflow for backup %s. err=%s", backupName, err)
@@ -133,8 +135,6 @@ func launchBackupRoutine(backupName string) error {
 				logrus.Infof("Backup launched. workflowId=%s", wid)
 				backupTriggerCounter.WithLabelValues(backupName, "success").Inc()
 			}
-
-			checkBackupWorkflow(backupName)
 
 			RunRetentionTask(backupName)
 
