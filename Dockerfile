@@ -26,7 +26,3 @@ COPY --from=BUILD /go/bin/* /bin/
 ADD startup.sh /
 
 CMD [ "/startup.sh" ]
-
-
-# FROM BUILD AS TEST
-# RUN go test -v backtor

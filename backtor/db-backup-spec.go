@@ -13,7 +13,7 @@ import (
 type BackupSpec struct {
 	Name                    string     `json:"name,omitempty"`
 	Enabled                 int        `json:"enabled,omitempty"`
-	RunningCreateWorkflowID *string    `json:"RunningCreateWorkflowID,omitempty"`
+	RunningCreateWorkflowID *string    `json:"runningCreateWorkflowID,omitempty"`
 	BackupCronString        *string    `json:"backupCronString,omitempty"`
 	FromDate                *time.Time `json:"fromDate,omitempty"`
 	ToDate                  *time.Time `json:"toDate,omitempty"`
