@@ -55,7 +55,7 @@ func createMaterializedBackup(id string, backupName string, dataID *string, stat
 }
 
 func getMaterializedBackup(id string) (MaterializedBackup, error) {
-	rows, err1 := db.Query("SELECT id,data_id,status,start_time,end_time,running_delete_workflow,size,reference,minutely,hourly,daily,weekly,monthly,yearly FROM materialized_backup WHERE id='" + id + "'")
+	rows, err1 := db.Query("SELECT id,data_id,backup_name,status,start_time,end_time,running_delete_workflow,size,reference,minutely,hourly,daily,weekly,monthly,yearly FROM materialized_backup WHERE id='" + id + "'")
 	if err1 != nil {
 		metricsSQLCounter.WithLabelValues("error").Inc()
 		return MaterializedBackup{}, err1
@@ -63,8 +63,9 @@ func getMaterializedBackup(id string) (MaterializedBackup, error) {
 	defer rows.Close()
 
 	for rows.Next() {
+		logrus.Debugf("Materialized backup %s found", id)
 		backup := MaterializedBackup{}
-		err2 := rows.Scan(&backup.ID, &backup.DataID, &backup.Status, &backup.StartTime, &backup.EndTime, &backup.RunningDeleteWorkflowID, &backup.SizeMB, &backup.Reference, &backup.Minutely, &backup.Hourly, &backup.Daily, &backup.Weekly, &backup.Monthly, &backup.Yearly)
+		err2 := rows.Scan(&backup.ID, &backup.DataID, &backup.BackupName, &backup.Status, &backup.StartTime, &backup.EndTime, &backup.RunningDeleteWorkflowID, &backup.SizeMB, &backup.Reference, &backup.Minutely, &backup.Hourly, &backup.Daily, &backup.Weekly, &backup.Monthly, &backup.Yearly)
 		if err2 != nil {
 			metricsSQLCounter.WithLabelValues("error").Inc()
 			return MaterializedBackup{}, err2
@@ -222,8 +223,8 @@ func markReferencesMinutelyMaterializedBackup(tx *sql.Tx, backupName string, sec
 	return res, err0
 }
 
-func setStatusMaterializedBackup(materializedID string, status string) (sql.Result, error) {
-	sql := `UPDATE materialized_backup SET status=? WHERE id=?`
+func setStatusMaterializedBackup(materializedID string, status string, workflowID *string) (sql.Result, error) {
+	sql := `UPDATE materialized_backup SET status=?, running_delete_workflow=? WHERE id=?`
 	stmt, err := db.Prepare(sql)
 	logrus.Infof("%s %s %s", sql, materializedID, status)
 	if err != nil {
@@ -231,7 +232,7 @@ func setStatusMaterializedBackup(materializedID string, status string) (sql.Resu
 		return nil, err
 	}
 	metricsSQLCounter.WithLabelValues("success").Inc()
-	return stmt.Exec(status, materializedID)
+	return stmt.Exec(status, workflowID, materializedID)
 }
 
 func markTagMaterializedBackup(tx *sql.Tx, backupName string, tag string, previousTag string, groupByPattern string, diffPattern string, ref string) (sql.Result, error) {

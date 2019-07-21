@@ -5,16 +5,22 @@ services:
   backtor:
     build: .
     image: flaviostutz/backtor
+    restart: always
     ports:
       - 6000:6000
     environment:
       - LOG_LEVEL=debug
       - CONDUCTOR_API_URL=http://backtor-conductor:8080/api
-    volumes:
-      - backtor:/var/lib/backtor/data
+
+  # backtor-tests:
+  #   build: tests/.
+  #   environment:
+  #     - BACKTOR_API_URL=http://backtor:6000/
+  #     - CONDUCTOR_API_URL=http://backtor-conductor:8080/api
 
   backtor-conductor:
     image: flaviostutz/backtor-conductor
+    restart: always
     ports:
       - 8080:8080
     environment:
@@ -25,11 +31,13 @@ services:
 
   dynomite:
     image: flaviostutz/dynomite:0.7.5
+    restart: always
     ports:
       - 8102:8102
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.8
+    restart: always
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1000m"
       - transport.host=0.0.0.0
@@ -46,13 +54,11 @@ services:
 
   conductor-ui:
     image: flaviostutz/conductor-ui
+    restart: always
     environment:
       - WF_SERVER=http://backtor-conductor:8080/api/
     ports:
       - 5000:5000
-
-volumes:
-  backtor:
 
   # backtor-restic:
   #   image: flaviostutz/backtor-restic

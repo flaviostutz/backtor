@@ -1,0 +1,15 @@
+version: '3.5'
+
+services:
+
+  my-tests:
+    build: .
+    ports:
+      - 2000:2000
+    environment:
+      - LOG_LEVEL=debug
+      - RUN_ON_STARTUP=true
+      - RUN_API_SERVER=true
+      - CONDUCTOR_API_URL=http://192.168.20.13:8080
+      - BACKTOR_API_URL=http://192.168.20.13:6000
+

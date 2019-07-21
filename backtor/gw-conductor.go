@@ -85,7 +85,7 @@ func launchRemoveBackupWorkflow(backupName string, dataID string) (workflowID st
 	// wf["version"] = "1.0"
 	mi := make(map[string]interface{})
 	mi["backupName"] = backupName
-	mi["dataID"] = dataID
+	mi["dataId"] = dataID
 	wf["input"] = mi
 	wfb, _ := json.Marshal(wf)
 

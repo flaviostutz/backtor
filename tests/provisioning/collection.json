@@ -1,0 +1,892 @@
+{
+	"info": {
+		"_postman_id": "9f514613-8f72-48d6-8f74-cf2fb39a12d7",
+		"name": "Backtor",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "BACKUP SPEC - POST /backup",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "945e12e8-0ed5-4ddd-a1a8-b4ba4cf5846a",
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "4eefa6b1-6f70-4868-95a9-09242deff712",
+						"exec": [
+							"pm.environment.set(\"backupName\", 'backup' + Math.round(Math.random()*99999999));",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\":\"{{backupName}}\",\n\t\"enabled\": 1\n}"
+				},
+				"url": {
+					"raw": "{{backtorUrl}}/backup",
+					"host": [
+						"{{backtorUrl}}"
+					],
+					"path": [
+						"backup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP SPEC - GET /backup",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "12ae1142-f444-4640-acfc-1c109803287f",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// pm.expect(json[0].name).to.equal(pm.environment.get(\"backupName\"))",
+							"",
+							"pm.test(\"backupName is in response list\", function () {",
+							"    pm.expect(pm.response.text()).to.include(pm.environment.get(\"backupName\"));",
+							"})",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{backtorUrl}}/backup",
+					"host": [
+						"{{backtorUrl}}"
+					],
+					"path": [
+						"backup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP SPEC - PUT /backup/tests$test1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "64aab077-a000-49ad-afee-cc27feb8f79e",
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"setTimeout(function(){}, 2500);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"backupCronString\": \"0/2 * * * * *\",\n    \"enabled\": 1,\n    \"retentionMinutely\": \"0@L\",\n    \"retentionHourly\": \"0@L\",\n    \"retentionDaily\": \"4@L\",\n    \"retentionWeekly\": \"4@L\",\n    \"retentionMonthly\": \"3@L\",\n    \"retentionYearly\": \"2@L\"\n}"
+				},
+				"url": {
+					"raw": "{{backtorUrl}}/backup/{{backupName}}",
+					"host": [
+						"{{backtorUrl}}"
+					],
+					"path": [
+						"backup",
+						"{{backupName}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP SPEC - GET /backup",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "12ae1142-f444-4640-acfc-1c109803287f",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"cron was updated\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"0/2 * * * * *\");",
+							"})",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{backtorUrl}}/backup",
+					"host": [
+						"{{backtorUrl}}"
+					],
+					"path": [
+						"backup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 1 - GET /tasks/poll/ BACKUP FIRST",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f07db4a7-8682-4100-b859-f827e7709712",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.environment.set(\"workflowInstanceId\", json.workflowInstanceId)",
+							"pm.environment.set(\"taskId\", json.taskId)",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/tasks/poll/backup?workerid=test",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"tasks",
+						"poll",
+						"backup"
+					],
+					"query": [
+						{
+							"key": "workerid",
+							"value": "test"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 1 - GET /workflow/id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "69c2e648-d0c3-429f-a0ba-55dfe146b91d",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"status is running\", function () {",
+							"    pm.expect(json.status).to.include(\"RUNNING\");",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/workflow/{{workflowInstanceId}}?includeTasks=false",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"workflow",
+						"{{workflowInstanceId}}"
+					],
+					"query": [
+						{
+							"key": "includeTasks",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 1 - POST /tasks BACKUP FIRST",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "21df795b-4bb3-45ca-999c-01a31e82eb4f",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"setTimeout(function(){}, 2500);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"workflowInstanceId\": \"{{workflowInstanceId}}\",\n    \"taskId\": \"{{taskId}}\",\n    \"reasonForIncompletion\" : \"OK\",\n    \"callbackAfterSeconds\": 0,\n    \"status\": \"COMPLETED\",\n    \"outputData\": {\n        \"dataId\": \"12345\",\n        \"dataSizeMB\": 678\n    }\n}"
+				},
+				"url": {
+					"raw": "{{conductorUrl}}/api/tasks",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 1 - GET /api/workflow/search?freeText=workflowid",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b1b4fba2-f31a-4ace-a969-c52e93ca86e9",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"status is completed\", function () {",
+							"    pm.expect(json.results[0].status).to.equal(\"COMPLETED\");",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/workflow/search?freeText={{workflowInstanceId}}&sort=endTime:DESC&size=5",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"workflow",
+						"search"
+					],
+					"query": [
+						{
+							"key": "freeText",
+							"value": "{{workflowInstanceId}}"
+						},
+						{
+							"key": "sort",
+							"value": "endTime:DESC"
+						},
+						{
+							"key": "size",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 1 - GET /workflow/id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3948216c-d696-4e0e-b526-36d74b291351",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"status is completed\", function () {",
+							"    pm.expect(json.status).to.equal(\"COMPLETED\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/workflow/{{workflowInstanceId}}?includeTasks=false",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"workflow",
+						"{{workflowInstanceId}}"
+					],
+					"query": [
+						{
+							"key": "includeTasks",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 1 - GET /backup",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3a36c3ff-c606-40cb-a082-e4d62bfcb1c7",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{backtorUrl}}/backup",
+					"host": [
+						"{{backtorUrl}}"
+					],
+					"path": [
+						"backup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "MATERIALIZED 1 - GET /backup/tests$test1/materialized",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "1ac02228-f51c-4022-b421-23b113d39c3d",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"materialized found\", function () {",
+							"    pm.expect(json.length>0);",
+							"});",
+							"",
+							"// pm.environment.set(\"materialized1ID\", json[0].ID)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{backtorUrl}}/backup/{{backupName}}/materialized",
+					"host": [
+						"{{backtorUrl}}"
+					],
+					"path": [
+						"backup",
+						"{{backupName}}",
+						"materialized"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 2 - GET /tasks/poll/",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f07db4a7-8682-4100-b859-f827e7709712",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.environment.set(\"workflowInstanceId\", json.workflowInstanceId)",
+							"pm.environment.set(\"taskId\", json.taskId)",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "646d8a18-e64a-40cd-b107-84fb39314072",
+						"exec": [
+							"setTimeout(function(){}, 2500);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/tasks/poll/backup?workerid=test",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"tasks",
+						"poll",
+						"backup"
+					],
+					"query": [
+						{
+							"key": "workerid",
+							"value": "test"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 2 - POST /tasks",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "21df795b-4bb3-45ca-999c-01a31e82eb4f",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"setTimeout(function(){}, 2500);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"workflowInstanceId\": \"{{workflowInstanceId}}\",\n    \"taskId\": \"{{taskId}}\",\n    \"reasonForIncompletion\" : \"OK\",\n    \"callbackAfterSeconds\": 0,\n    \"status\": \"COMPLETED\",\n    \"outputData\": {\n        \"dataId\": \"12347\",\n        \"dataSizeMB\": 500\n    }\n}"
+				},
+				"url": {
+					"raw": "{{conductorUrl}}/api/tasks",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "BACKUP 2 - /api/workflow/search",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b1b4fba2-f31a-4ace-a969-c52e93ca86e9",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"workflow completed\", function () {",
+							"    pm.expect(json.results[0].status).to.equal(\"COMPLETED\");",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/workflow/search?freeText={{workflowInstanceId}}&sort=endTime:DESC&size=5",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"workflow",
+						"search"
+					],
+					"query": [
+						{
+							"key": "freeText",
+							"value": "{{workflowInstanceId}}"
+						},
+						{
+							"key": "sort",
+							"value": "endTime:DESC"
+						},
+						{
+							"key": "size",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "REMOVE 1 - /api/workflow/search",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b1b4fba2-f31a-4ace-a969-c52e93ca86e9",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"pending backups found\", function () {",
+							"    pm.expect(json.results[0].status).to.equal(\"RUNNING\");",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/workflow/search?freeText=remove_backup&sort=endTime:DESC&size=5",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"workflow",
+						"search"
+					],
+					"query": [
+						{
+							"key": "freeText",
+							"value": "remove_backup"
+						},
+						{
+							"key": "sort",
+							"value": "endTime:DESC"
+						},
+						{
+							"key": "size",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "REMOVE 1 - GET /tasks/poll/remove",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f07db4a7-8682-4100-b859-f827e7709712",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.environment.set(\"workflowInstanceId\", json.workflowInstanceId)",
+							"pm.environment.set(\"taskId\", json.taskId)",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "646d8a18-e64a-40cd-b107-84fb39314072",
+						"exec": [
+							"setTimeout(function(){}, 2500);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conductorUrl}}/api/tasks/poll/remove?workerid=test",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"tasks",
+						"poll",
+						"remove"
+					],
+					"query": [
+						{
+							"key": "workerid",
+							"value": "test"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "REMOVE 1 - POST /tasks",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "21df795b-4bb3-45ca-999c-01a31e82eb4f",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"setTimeout(function(){}, 2500);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"workflowInstanceId\": \"{{workflowInstanceId}}\",\n    \"taskId\": \"{{taskId}}\",\n    \"reasonForIncompletion\" : \"OK\",\n    \"callbackAfterSeconds\": 0,\n    \"status\": \"COMPLETED\",\n    \"outputData\": {\n    }\n}"
+				},
+				"url": {
+					"raw": "{{conductorUrl}}/api/tasks",
+					"host": [
+						"{{conductorUrl}}"
+					],
+					"path": [
+						"api",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "MATERIALIZED 1 - GET /backup/tests$test1/materialized",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "520c7f39-8079-45ed-9a97-2d203c38608a",
+						"exec": [
+							"var json = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"has deleted materialized\", function () {",
+							"    pm.expect(responseBody).to.include(\"deleted\");",
+							"});",
+							"",
+							"pm.test(\"has completed materialized\", function () {",
+							"    pm.expect(responseBody).to.include(\"COMPLETED\");",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{backtorUrl}}/backup/{{backupName}}/materialized",
+					"host": [
+						"{{backtorUrl}}"
+					],
+					"path": [
+						"backup",
+						"{{backupName}}",
+						"materialized"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

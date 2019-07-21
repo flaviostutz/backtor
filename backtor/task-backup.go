@@ -79,7 +79,7 @@ func InitTaskBackup() {
 func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 	start := time.Now()
 	logrus.Info("")
-	logrus.Info(">>>> BACKUP WORKFLOW LAUNCH %s", backupName)
+	logrus.Infof(">>>> BACKUP WORKFLOW LAUNCH %s", backupName)
 
 	logrus.Debugf("Checking if there is another backup running. name=%s", backupName)
 
@@ -234,7 +234,7 @@ func tagAllBackups(backupName string) error {
 
 	//hourly
 	logrus.Debugf("Marking hourly tags")
-	res, err = markTagMaterializedBackup(tx, "hourly", "minutely", "%Y-%m-%dT%H:0:0.000", "%M", bs.Name, bs.HourlyParams()[1])
+	res, err = markTagMaterializedBackup(tx, bs.Name, "hourly", "minutely", "%Y-%m-%dT%H:0:0.000", "%M", bs.HourlyParams()[1])
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("Error marking hourly tags. err=%s", err)
@@ -243,7 +243,7 @@ func tagAllBackups(backupName string) error {
 
 	//daily
 	logrus.Debugf("Marking daily tags")
-	res, err = markTagMaterializedBackup(tx, "daily", "hourly", "%Y-%m-%w-%dT0:0:0.000", "%H", bs.Name, bs.DailyParams()[1])
+	res, err = markTagMaterializedBackup(tx, bs.Name, "daily", "hourly", "%Y-%m-%w-%dT0:0:0.000", "%H", bs.DailyParams()[1])
 	if err != nil {
 		tx.Rollback()
 		backupTagCounter.WithLabelValues(bs.Name, "error").Inc()
@@ -254,7 +254,7 @@ func tagAllBackups(backupName string) error {
 
 	//weekly
 	logrus.Debugf("Marking weekly tags")
-	res, err = markTagMaterializedBackup(tx, "weekly", "daily", "%Y-%m-%W-0T0:0:0.000", "%w", bs.Name, bs.WeeklyParams()[1])
+	res, err = markTagMaterializedBackup(tx, bs.Name, "weekly", "daily", "%Y-%m-%W-0T0:0:0.000", "%w", bs.WeeklyParams()[1])
 	if err != nil {
 		tx.Rollback()
 		backupTagCounter.WithLabelValues(bs.Name, "error").Inc()
@@ -280,7 +280,7 @@ func tagAllBackups(backupName string) error {
 
 	//yearly
 	logrus.Debugf("Marking yearly tags")
-	res, err = markTagMaterializedBackup(tx, "yearly", "monthly", "%Y-0-0T0:0:0.000", "%m", bs.Name, bs.YearlyParams()[1])
+	res, err = markTagMaterializedBackup(tx, bs.Name, "yearly", "monthly", "%Y-0-0T0:0:0.000", "%m", bs.YearlyParams()[1])
 	if err != nil {
 		tx.Rollback()
 		backupTagCounter.WithLabelValues(bs.Name, "error").Inc()
