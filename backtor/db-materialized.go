@@ -19,21 +19,21 @@ var metricsSQLCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 
 //MaterializedBackup backup record
 type MaterializedBackup struct {
-	ID                      string
-	DataID                  string
-	Status                  string
-	BackupName              string
-	StartTime               time.Time
-	EndTime                 time.Time
-	SizeMB                  float64
-	RunningDeleteWorkflowID *string
-	Reference               int
-	Minutely                int
-	Hourly                  int
-	Daily                   int
-	Weekly                  int
-	Monthly                 int
-	Yearly                  int
+	ID                      string    `json:"id"`
+	DataID                  string    `json:"dataId"`
+	Status                  string    `json:"status"`
+	BackupName              string    `json:"backupName"`
+	StartTime               time.Time `json:"startTime"`
+	EndTime                 time.Time `json:"endTime"`
+	SizeMB                  float64   `json:"sizeMB"`
+	RunningDeleteWorkflowID *string   `json:"runningDeleteWorkflowId,omitempty"`
+	Reference               int       `json:"reference"`
+	Minutely                int       `json:"minutely"`
+	Hourly                  int       `json:"hourly"`
+	Daily                   int       `json:"daily"`
+	Weekly                  int       `json:"weekly"`
+	Monthly                 int       `json:"monthly"`
+	Yearly                  int       `json:"yearly"`
 }
 
 func createMaterializedBackup(id string, backupName string, dataID *string, status string, startDate time.Time, endDate time.Time, size *float64) error {
@@ -130,11 +130,19 @@ func getMaterializedBackups(backupName string, limit int, tag string, status str
 func getExclusiveTagAvailableMaterializedBackups(backupName string, tag string, skipNewestCount int, limit int) ([]MaterializedBackup, error) {
 	whereTags := fmt.Sprintf("backup_name='%s'", backupName)
 	tags := []string{"minutely", "hourly", "daily", "weekly", "monthly", "yearly"}
+
 	if tag != "" {
-		for _, t := range tags {
+		//find tag index
+		ti := -1
+		for i, t := range tags {
 			if t == tag {
+				ti = i
+			}
+		}
+		for i, t := range tags {
+			if i <= ti {
 				whereTags = whereTags + " AND " + t + "=1"
-			} else if whereTags != "" {
+			} else {
 				whereTags = whereTags + " AND " + t + "=0"
 			}
 		}

@@ -124,8 +124,6 @@ func launchBackupRoutine(backupName string) error {
 
 		if isBefore && isAfter {
 
-			checkBackupWorkflow(backupName)
-
 			wid, err := triggerNewBackup(backupName)
 			if err != nil {
 				logrus.Warnf("Error launching backup workflow for backup %s. err=%s", backupName, err)
@@ -138,12 +136,13 @@ func launchBackupRoutine(backupName string) error {
 
 			RunRetentionTask(backupName)
 
-			checkWorkflowBackupRemove(backupName)
-
 		} else {
 			logrus.Debugf("Backup %s is enabled, but not within activation date", backupName)
 		}
-
+	})
+	c.AddFunc("@every 1h", func() {
+		checkBackupWorkflow(backupName)
+		checkWorkflowBackupRemove(backupName)
 	})
 	routineHash := fmt.Sprintf("%s|%s)", backupName, *bs1.BackupCronString)
 	scheduledRoutineHashes[routineHash] = c

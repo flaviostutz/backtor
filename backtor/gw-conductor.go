@@ -41,7 +41,7 @@ func InitConductor() {
 	prometheus.MustRegister(invocationHist)
 }
 
-func launchCreateBackupWorkflow(backupName string) (workflowID string, err error) {
+func launchCreateBackupWorkflow(backupName string, timeoutSeconds *int, workerConfig *string) (workflowID string, err error) {
 	logrus.Debugf("startWorkflow backupName=%s", backupName)
 
 	logrus.Debugf("Loading backup definition from DB")
@@ -59,6 +59,15 @@ func launchCreateBackupWorkflow(backupName string) (workflowID string, err error
 	// wf["version"] = "1.0"
 	mi := make(map[string]interface{})
 	mi["backupName"] = bs.Name
+	if timeoutSeconds != nil {
+		mi["timeoutSeconds"] = *timeoutSeconds
+	}
+	if timeoutSeconds != nil {
+		mi["timeoutSeconds"] = *timeoutSeconds
+	}
+	if workerConfig != nil {
+		mi["workerConfig"] = *workerConfig
+	}
 	wf["input"] = mi
 	wfb, _ := json.Marshal(wf)
 
@@ -77,7 +86,7 @@ func launchCreateBackupWorkflow(backupName string) (workflowID string, err error
 	return string(data), nil
 }
 
-func launchRemoveBackupWorkflow(backupName string, dataID string) (workflowID string, err error) {
+func launchRemoveBackupWorkflow(backupName string, dataID string, timeoutSeconds *int, workerConfig *string) (workflowID string, err error) {
 	logrus.Debugf("removeBackupWorkflow backupName=%s dataID=%s", backupName, dataID)
 
 	wf := make(map[string]interface{})
@@ -86,6 +95,12 @@ func launchRemoveBackupWorkflow(backupName string, dataID string) (workflowID st
 	mi := make(map[string]interface{})
 	mi["backupName"] = backupName
 	mi["dataId"] = dataID
+	if timeoutSeconds != nil {
+		mi["timeoutSeconds"] = *timeoutSeconds
+	}
+	if workerConfig != nil {
+		mi["workerConfig"] = *workerConfig
+	}
 	wf["input"] = mi
 	wfb, _ := json.Marshal(wf)
 

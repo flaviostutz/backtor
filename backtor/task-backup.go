@@ -77,9 +77,10 @@ func InitTaskBackup() {
 }
 
 func triggerNewBackup(backupName string) (workflowID string, err3 error) {
-	start := time.Now()
 	logrus.Info("")
-	logrus.Infof(">>>> BACKUP WORKFLOW LAUNCH %s", backupName)
+	logrus.Infof(">>>> TRIGGER NEW BACKUP %s", backupName)
+
+	start := time.Now()
 
 	logrus.Debugf("Checking if there is another backup running. name=%s", backupName)
 
@@ -104,7 +105,7 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 	}
 
 	logrus.Debugf("Launching workflow for backup creation. api=%s", opt.ConductorAPIURL)
-	workflowID, err1 := launchCreateBackupWorkflow(backupName)
+	workflowID, err1 := launchCreateBackupWorkflow(backupName, bs.TimeoutSeconds, bs.WorkerConfig)
 	if err1 != nil {
 		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
 		return "", fmt.Errorf("Couldn't invoke Conductor workflow for backup creation. err=%s", err1)
@@ -123,6 +124,7 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 
 func checkBackupWorkflow(backupName string) {
 	logrus.Debugf("checkBackupTask %s", backupName)
+
 	bs, err := getBackupSpec(backupName)
 	if err != nil {
 		logrus.Debugf("Couldn't get backup spec %s. err=%s", backupName, err)
@@ -145,9 +147,6 @@ func checkBackupWorkflow(backupName string) {
 	}
 
 	logrus.Infof("Conductor workflow id %s finish detected. status=%s. backup=%s", wf.workflowID, wf.status, backupName)
-	//avoid doing retention until the newly created backup is tagged to avoid it to be elected for removal (because it will have no tags)
-	avoidRetentionLock.Lock()
-	defer avoidRetentionLock.Unlock()
 
 	err2 := updateBackupSpecRunningCreateWorkflowID(backupName, nil)
 	if err2 != nil {
@@ -168,6 +167,10 @@ func checkBackupWorkflow(backupName string) {
 		return
 	}
 
+	//avoid doing retention until the newly created backup is tagged to avoid
+	//it to be elected for removal (because it will have no tags)
+	retentionLock(backupName).Lock()
+	defer retentionLock(backupName).Unlock()
 	err1 := createMaterializedBackup(wf.workflowID, backupName, wf.dataID, wf.status, wf.startTime, wf.endTime, wf.dataSizeMB)
 	if err1 != nil {
 		logrus.Errorf("Couldn't create materialized backup on database. err=%s", err1)

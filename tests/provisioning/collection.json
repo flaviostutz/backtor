@@ -139,7 +139,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"backupCronString\": \"0/2 * * * * *\",\n    \"enabled\": 1,\n    \"retentionMinutely\": \"0@L\",\n    \"retentionHourly\": \"0@L\",\n    \"retentionDaily\": \"4@L\",\n    \"retentionWeekly\": \"4@L\",\n    \"retentionMonthly\": \"3@L\",\n    \"retentionYearly\": \"2@L\"\n}"
+					"raw": "{\n    \"backupCronString\": \"0/2 * * * * *\",\n    \"enabled\": 1,\n    \"timeoutSeconds\": 10000,\n    \"workerConfig\": \"test\",\n    \"retentionMinutely\": \"3@L\",\n    \"retentionHourly\": \"0@L\",\n    \"retentionDaily\": \"4@L\",\n    \"retentionWeekly\": \"4@L\",\n    \"retentionMonthly\": \"3@L\",\n    \"retentionYearly\": \"2@L\"\n}"
 				},
 				"url": {
 					"raw": "{{backtorUrl}}/backup/{{backupName}}",

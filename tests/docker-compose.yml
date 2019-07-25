@@ -10,6 +10,6 @@ services:
       - LOG_LEVEL=debug
       - RUN_ON_STARTUP=true
       - RUN_API_SERVER=true
-      - CONDUCTOR_API_URL=http://192.168.20.13:8080
-      - BACKTOR_API_URL=http://192.168.20.13:6000
+      - CONDUCTOR_API_URL=http://172.20.10.2:8080
+      - BACKTOR_API_URL=http://172.20.10.2:6000
 
