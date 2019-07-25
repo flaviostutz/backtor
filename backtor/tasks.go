@@ -13,8 +13,6 @@ var (
 	opt                    Options
 	db                     *sql.DB
 	scheduledRoutineHashes = make(map[string]*cron.Cron)
-	fastCheckBackup        = make(map[string]bool)
-	fastCheckRemove        = make(map[string]bool)
 )
 
 //Options command line options used to run backtor
@@ -156,27 +154,3 @@ func launchBackupRoutine(backupName string) error {
 	go c.Start()
 	return nil
 }
-
-func fastBackup(backupName string) map[string]bool {
-	_, ok := fastCheckBackup[backupName]
-	if !ok {
-		fastCheckBackup[backupName] = false
-	}
-	return fastCheckBackup
-}
-func fastRemove(backupName string) map[string]bool {
-	_, ok := fastCheckRemove[backupName]
-	if !ok {
-		fastCheckRemove[backupName] = false
-	}
-	return fastCheckRemove
-}
-
-// func launchBackupRoutine() {
-// 	c := cron.New()
-// 	c.AddFunc(options.BackupCron, func() { backtor.RunBackupTask() })
-// 	c.AddFunc("@every 5s", func() { backtor.CheckBackupTask() })
-// 	c.AddFunc(options.RetentionCron, func() { backtor.RunRetentionTask() })
-// 	c.AddFunc("@every 1d", func() { backtor.RetryDeleteErrors() })
-// 	go c.Start()
-// }
