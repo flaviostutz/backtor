@@ -107,6 +107,9 @@ func launchBackupRoutine(backupName string) error {
 	c.AddFunc(*bs1.BackupCronString, func() {
 		logrus.Debugf("Timer triggered for backup %s", backupName)
 
+		checkBackupWorkflow(backupName)
+		checkWorkflowBackupRemove(backupName)
+
 		bs, err := getBackupSpec(backupName)
 		if err != nil {
 			logrus.Errorf("Couldn't load backup spec %s. err=%s", backupName, err)
@@ -145,9 +148,10 @@ func launchBackupRoutine(backupName string) error {
 			logrus.Debugf("Backup %s is enabled, but not within activation date", backupName)
 		}
 	})
-	c.AddFunc("@every 300s", func() {
+	c.AddFunc("@every 4h", func() {
 		checkBackupWorkflow(backupName)
 		checkWorkflowBackupRemove(backupName)
+		RunRetentionTask(backupName)
 	})
 	routineHash := fmt.Sprintf("%s|%s)", backupName, *bs1.BackupCronString)
 	scheduledRoutineHashes[routineHash] = c
