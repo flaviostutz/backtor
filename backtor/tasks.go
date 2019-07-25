@@ -113,6 +113,11 @@ func launchBackupRoutine(backupName string) error {
 			return
 		}
 
+		if bs.Enabled == 0 {
+			logrus.Warnf("Backup %s is not enabled but its go routine is running", backupName)
+			return
+		}
+
 		isBefore := false
 		if bs.ToDate == nil || time.Now().Before(*bs.ToDate) {
 			isBefore = true
@@ -140,7 +145,7 @@ func launchBackupRoutine(backupName string) error {
 			logrus.Debugf("Backup %s is enabled, but not within activation date", backupName)
 		}
 	})
-	c.AddFunc("@every 1h", func() {
+	c.AddFunc("@every 5s", func() {
 		checkBackupWorkflow(backupName)
 		checkWorkflowBackupRemove(backupName)
 	})

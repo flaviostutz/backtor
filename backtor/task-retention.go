@@ -216,11 +216,11 @@ func appendElectedForTag(backupName string, tag string, retentionCount string, a
 		logrus.Errorf("%s: Invalid retention parameter: err=%s", tag, err0)
 		return appendTo
 	}
-	mbackups, err := getExclusiveTagAvailableMaterializedBackups(backupName, tag, ret, 30)
+	mbackups, err := getExclusiveTagAvailableMaterializedBackups(backupName, tag, ret, 20)
 	if err != nil {
 		logrus.Errorf("%s: Error querying backups for deletion. err=%s", tag, err)
 		return appendTo
 	}
-	logrus.Debugf("%s: %d backups elected for deletion (limited to 10)", tag, len(mbackups))
+	logrus.Debugf("%s: %d backups elected for deletion (limited to 20)", tag, len(mbackups))
 	return append(appendTo, mbackups...)
 }

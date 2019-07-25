@@ -152,7 +152,7 @@ func getExclusiveTagAvailableMaterializedBackups(backupName string, tag string, 
 		}
 	}
 
-	q := fmt.Sprintf("SELECT id,data_id,status,backup_name,start_time,end_time,running_delete_workflow,reference,minutely,hourly,daily,weekly,monthly,yearly FROM materialized_backup WHERE %s AND status='COMPLETED' ORDER BY start_time DESC LIMIT %d OFFSET %d", whereTags, limit, skipNewestCount)
+	q := fmt.Sprintf("SELECT id,data_id,status,backup_name,start_time,end_time,running_delete_workflow,reference,minutely,hourly,daily,weekly,monthly,yearly FROM materialized_backup WHERE %s AND status='COMPLETED' ORDER BY start_time DESC LIMIT %d OFFSET %d", whereTags, limit, skipNewestCount-1)
 	logrus.Debugf("getExclusiveTagAvailableMaterializedBackups query=%s", q)
 	rows, err1 := db.Query(q)
 	if err1 != nil {
