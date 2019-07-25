@@ -12,6 +12,17 @@ services:
       - LOG_LEVEL=debug
       - CONDUCTOR_API_URL=http://backtor-conductor:8080/api
 
+  backtor-restic:
+    image: flaviostutz/backtor-restic
+    ports:
+      - 7070:7070
+    environment:
+      - RESTIC_PASSWORD=123
+      - LOG_LEVEL=debug
+      - SOURCE_DATA_PATH=/backup-source/
+      - REPO_DIR=/backup-repo
+      - CONDUCTOR_API_URL=http://backtor-conductor:8080/api
+
   # backtor-tests:
   #   build: tests/.
   #   environment:
@@ -59,15 +70,3 @@ services:
       - WF_SERVER=http://backtor-conductor:8080/api/
     ports:
       - 5000:5000
-
-  # backtor-restic:
-  #   image: flaviostutz/backtor-restic
-  #   ports:
-  #     - 7070:7070
-  #   environment:
-  #     - RESTIC_PASSWORD=123
-  #     - LOG_LEVEL=debug
-  #     - PRE_BACKUP_COMMAND=dd if=/dev/zero of=/backup-source/TESTFILE bs=100MB count=2
-  #     - POST_BACKUP_COMMAND=rm /backup-source/TESTFILE
-  #     - SOURCE_DATA_PATH=/backup-source/TESTFILE
-  #     - TARGET_DATA_PATH=/backup-repo
