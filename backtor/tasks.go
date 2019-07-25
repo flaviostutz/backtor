@@ -13,6 +13,8 @@ var (
 	opt                    Options
 	db                     *sql.DB
 	scheduledRoutineHashes = make(map[string]*cron.Cron)
+	fastCheckBackup        = make(map[string]bool)
+	fastCheckRemove        = make(map[string]bool)
 )
 
 //Options command line options used to run backtor
@@ -145,7 +147,7 @@ func launchBackupRoutine(backupName string) error {
 			logrus.Debugf("Backup %s is enabled, but not within activation date", backupName)
 		}
 	})
-	c.AddFunc("@every 5s", func() {
+	c.AddFunc("@every 300s", func() {
 		checkBackupWorkflow(backupName)
 		checkWorkflowBackupRemove(backupName)
 	})
@@ -153,6 +155,21 @@ func launchBackupRoutine(backupName string) error {
 	scheduledRoutineHashes[routineHash] = c
 	go c.Start()
 	return nil
+}
+
+func fastBackup(backupName string) map[string]bool {
+	_, ok := fastCheckBackup[backupName]
+	if !ok {
+		fastCheckBackup[backupName] = false
+	}
+	return fastCheckBackup
+}
+func fastRemove(backupName string) map[string]bool {
+	_, ok := fastCheckRemove[backupName]
+	if !ok {
+		fastCheckRemove[backupName] = false
+	}
+	return fastCheckRemove
 }
 
 // func launchBackupRoutine() {

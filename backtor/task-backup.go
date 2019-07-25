@@ -117,6 +117,8 @@ func triggerNewBackup(backupName string) (workflowID string, err3 error) {
 		return "", err4
 	}
 
+	fastBackup(backupName)[backupName] = true
+
 	elapsed := time.Now().Sub(start)
 	logrus.Debugf("Backup triggering done. elapsed=%s", elapsed)
 	return workflowID, nil
@@ -177,6 +179,8 @@ func checkBackupWorkflow(backupName string) {
 		overallBackupWarnCounter.WithLabelValues(backupName, "error").Inc()
 		return
 	}
+
+	fastBackup(backupName)[backupName] = false
 
 	logrus.Debugf("Materialized backup saved to database successfuly. id=%s", wf.workflowID)
 	backupMaterializedCounter.WithLabelValues(backupName, "success").Inc()
