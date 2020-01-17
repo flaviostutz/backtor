@@ -19,6 +19,9 @@ The triggering and retainment of backups are based on the functional perception 
 
 Based on those retention parameters, Backtor will launch a "create_backup" workflow or a "remove_backup" workflow on Conductor in order to maintain what we need as a backup that can save our souls! The actual backup creation or removal is performed by Conductor workers specialized on the target backup storage/tool.
 
+Check out another Conductor based tool that may be helpful for you:
+* [Schellar](https://github.com/flaviostutz/schellar) is a scheduler tool for instantiating Conductor workflows from time to time
+
 Hope this can help you!
 
 ## Run
