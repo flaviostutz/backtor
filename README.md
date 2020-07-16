@@ -1,5 +1,7 @@
 # backtor
 
+[<img src="https://img.shields.io/docker/automated/flaviostutz/backtor"/>](https://hub.docker.com/r/flaviostutz/backtor)
+
 Backtor is a backup scheduler tool that uses Conductor workers to handle backup operations.
 
 It is focused on the scheduling part of a common backup routine, leaving the dirty storage job for specialized storage/database tools. You can use any backup backend by just implementing a simple Conductor worker for the tasks "backup" and "remove".
