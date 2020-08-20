@@ -1,6 +1,7 @@
 # backtor
 
-[<img src="https://img.shields.io/docker/automated/flaviostutz/backtor"/>](https://hub.docker.com/r/flaviostutz/backtor)
+[<img src="https://img.shields.io/docker/automated/flaviostutz/backtor"/>](https://hub.docker.com/r/flaviostutz/backtor)<br/>
+[<img src="https://goreportcard.com/badge/github.com/flaviostutz/backtor"/>](https://goreportcard.com/report/github.com/flaviostutz/backtor)
 
 Backtor is a backup scheduler tool that uses Conductor workers to handle backup operations.
 
